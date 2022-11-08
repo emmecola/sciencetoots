@@ -74,7 +74,7 @@ def writeMedia(T,media_folder):
     return media_string
 
 def toot(temp_file,replyto_string,media_string,visibility):
-    command_string = "cat " + temp_file + " | toot post --quiet -v " + visibility + " " + replyto_string + media_string
+    command_string = "cat " + temp_file + " | toot post -v " + visibility + " " + replyto_string + media_string
     toot_id=os.popen(command_string).read().strip().split('/')[-1]
     return toot_id
 
