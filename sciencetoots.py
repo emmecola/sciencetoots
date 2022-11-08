@@ -81,9 +81,6 @@ def toot(temp_file,replyto_string,media_string,visibility):
 def cleanMedia(media_folder):
     os.popen("rm -rf " + media_folder + "/*")
 
-def cleanTemp(temp_file):
-    os.popen("> " + temp_file)
-
 def sendToMastodon(thread):
     replied_id=''
     for idx,T in enumerate(reversed(thread)):        
@@ -91,7 +88,6 @@ def sendToMastodon(thread):
         media_string = writeMedia(T,media_folder)
         replied_id=toot(temp_file,replyto_string,media_string,visibility)
         cleanMedia(media_folder)
-        cleanTemp(temp_file)
 
 def getMedia(tweet):
     media_list = list()
