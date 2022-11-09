@@ -50,7 +50,7 @@ def checkAuthor(thread):
 
 def prepareFirstTweet(T):
     header = T["author"]+ " wrote this:\n\n"
-    footer = "\n\nhttps://twitter.com/twitter/statuses/" + str(T["id"])
+    footer = "\n\nOriginal tweet: https://twitter.com/twitter/statuses/" + str(T["id"])
     return header,footer
     
 def writeTweet(idx,T,temp_file,replied_id):
@@ -123,7 +123,7 @@ class ScienceToot(tweepy.Stream):
             thread.append({'id': replied_tweet.id,
                            'user': replied_tweet.user.screen_name,
                            'author': replied_tweet.author.name,
-                           'text': cleanMediaURL(replied_tweet.full_text),
+                           'text': replied_tweet.full_text,
                            'media': media_list})
             replied_to = replied_tweet.in_reply_to_status_id
         if len(thread)>0 and valid==1 and checkAuthor(thread) and checkArchive(thread,archive_file):
