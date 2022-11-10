@@ -94,7 +94,10 @@ def getMedia(tweet):
     if hasattr(tweet, 'extended_entities'):
         if 'media' in tweet.extended_entities:
             for M in tweet.extended_entities['media']:
-                media_list.append(M['media_url_https'])
+            	if 'video_info' in M:
+            		media_list.append(M['video_info']['variants'][0]['url'])
+            	else:
+                	media_list.append(M['media_url_https'])
         else:
             pass
     else:
