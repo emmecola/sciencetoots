@@ -8,7 +8,7 @@ tweet/thread. Images are also included in the messages sent to Mastodon.
 
 # Import modules
 import tweepy
-import os
+import subprocess
 import re
 
 # My keys
@@ -63,23 +63,26 @@ def writeTweet(idx,T,temp_file,replied_id):
         replyto_string='-r '+str(replied_id)+' '
         visibility='unlisted'
     with open(temp_file,'w') as f:
-        f.write(header+T["text"]+footer)
+        f.write(header+cleanMediaURL(T["text"],T["to_be_removed"])+footer)
     return replyto_string,visibility
 
 def writeMedia(T,media_folder):
     media_string = ''
     for idx,M in enumerate(T["media"]):
-        os.popen("wget " + M + " -O " + media_folder + "/" + str(idx))
+        subprocess.run("wget " + M + " -O " + media_folder + "/" + str(idx),shell=True)
         media_string = media_string + "-m " + media_folder + "/" + str(idx) + " "
     return media_string
 
 def toot(temp_file,replyto_string,media_string,visibility):
     command_string = "cat " + temp_file + " | toot post -v " + visibility + " " + replyto_string + media_string
-    toot_id=os.popen(command_string).read().strip().split('/')[-1]
+    print(command_string)
+    output = subprocess.run(command_string,shell=True,capture_output=True).stdout.decode("utf-8") 
+    toot_id=output.strip().split('/')[-1]
+    print(toot_id)
     return toot_id
 
 def cleanMedia(media_folder):
-    os.popen("rm -rf " + media_folder + "/*")
+    subprocess.run("rm -rf " + media_folder + "/*",shell=True)
 
 def sendToMastodon(thread):
     replied_id=''
@@ -91,21 +94,25 @@ def sendToMastodon(thread):
 
 def getMedia(tweet):
     media_list = list()
+    to_be_removed = list()
     if hasattr(tweet, 'extended_entities'):
         if 'media' in tweet.extended_entities:
             for M in tweet.extended_entities['media']:
-            	if 'video_info' in M:
-            		media_list.append(M['video_info']['variants'][0]['url'])
-            	else:
-                	media_list.append(M['media_url_https'])
+                to_be_removed.append(M["url"])
+                if 'video_info' in M:
+            	        media_list.append(M['video_info']['variants'][0]['url'])
+                else:
+                        media_list.append(M['media_url_https'])
         else:
             pass
     else:
         pass
-    return media_list
+    return media_list,to_be_removed
 
-def cleanMediaURL(text):
-    return re.sub(r'https://t.co/[\w]*',"",text)
+def cleanMediaURL(text,to_be_removed):
+    for R in to_be_removed:
+        text = text.replace(R,'')
+    return text
 
 class ScienceToot(tweepy.Stream):
     
@@ -122,12 +129,13 @@ class ScienceToot(tweepy.Stream):
             except:
                 valid = 0
                 break
-            media_list = getMedia(replied_tweet)
+            media_list,to_be_removed = getMedia(replied_tweet)
             thread.append({'id': replied_tweet.id,
                            'user': replied_tweet.user.screen_name,
                            'author': replied_tweet.author.name,
                            'text': replied_tweet.full_text,
-                           'media': media_list})
+                           'media': media_list,
+                           'to_be_removed': to_be_removed})
             replied_to = replied_tweet.in_reply_to_status_id
         if len(thread)>0 and valid==1 and checkAuthor(thread) and checkArchive(thread,archive_file):
             sendToMastodon(thread)
