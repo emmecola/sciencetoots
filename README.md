@@ -1,4 +1,4 @@
-# sciencetoots
+# sciencetoots [inactive]
 
 This script listens to public tweets mentioning "Send to @ScienceToots",
 it checks if the tweets are replies to another tweet or thread and sends the
